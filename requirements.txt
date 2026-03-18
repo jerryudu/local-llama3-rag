@@ -1,0 +1,10 @@
+langchain
+langchain-community
+langchain-core
+langchain-huggingface
+chromadb
+sentence-transformers
+transformers
+torch
+accelerate
+bitsandbytes

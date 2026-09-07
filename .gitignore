@@ -1,3 +1,11 @@
 chroma_db/
 __pycache__/
 .env
+*.py[cod]
+.pytest_cache/
+.venv/
+llama3-tech-lora-adapter/
+llama3-tech-lora-results/
+results/
+.huggingface/
+.cache/

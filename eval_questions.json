@@ -1,0 +1,22 @@
+[
+{"id":"policy-01","category":"direct","question":"公司的標準上班時間是幾點到幾點？","expected_keywords":["09:00","18:00"],"should_refuse":false},
+{"id":"policy-02","category":"direct","question":"午休時間有多久？","expected_keywords":["12:00","13:30","一個半小時"],"should_refuse":false},
+{"id":"policy-03","category":"direct","question":"每週哪幾天可以彈性上下班？","expected_keywords":["週二","週三","週四","週五"],"should_refuse":false},
+{"id":"policy-04","category":"direct","question":"彈性上下班最晚幾點到公司？","expected_keywords":["09:30"],"should_refuse":false},
+{"id":"policy-05","category":"cross_sentence","question":"週一可以 09:30 到公司嗎？","expected_keywords":["週一","09:00","不能"],"should_refuse":false},
+{"id":"policy-06","category":"direct","question":"第一年有幾天特休？","expected_keywords":["10 天"],"should_refuse":false},
+{"id":"policy-07","category":"direct","question":"每年有幾天全薪病假？","expected_keywords":["3 天"],"should_refuse":false},
+{"id":"policy-08","category":"cross_sentence","question":"連續請病假幾天需要醫療證明？","expected_keywords":["超過 2 天","收據"],"should_refuse":false},
+{"id":"policy-09","category":"direct","question":"通過試用期後每週最多 WFH 幾天？","expected_keywords":["三個月","2 天"],"should_refuse":false},
+{"id":"policy-10","category":"cross_sentence","question":"試用期未滿三個月可以 WFH 嗎？","expected_keywords":["三個月","不可以"],"should_refuse":false},
+{"id":"policy-11","category":"direct","question":"遠距工作要連什麼才能存取 GitLab？","expected_keywords":["VPN","GitLab"],"should_refuse":false},
+{"id":"policy-12","category":"direct","question":"每年購書與進修補助是多少？","expected_keywords":["5,000 元"],"should_refuse":false},
+{"id":"policy-13","category":"cross_sentence","question":"申請購書補助前要做什麼？","expected_keywords":["主管","同意"],"should_refuse":false},
+{"id":"policy-14","category":"direct","question":"健康檢查補助是多少？","expected_keywords":["3,000 元"],"should_refuse":false},
+{"id":"policy-15","category":"direct","question":"公司 CEO 是誰？","expected_keywords":[],"should_refuse":true},
+{"id":"policy-16","category":"direct","question":"年終獎金有幾個月？","expected_keywords":[],"should_refuse":true},
+{"id":"policy-17","category":"direct","question":"公司股票代號是什麼？","expected_keywords":[],"should_refuse":true},
+{"id":"policy-18","category":"direct","question":"員工停車費是多少？","expected_keywords":[],"should_refuse":true},
+{"id":"policy-19","category":"cross_sentence","question":"WFH 時可以把客戶資料下載到個人電腦嗎？","expected_keywords":["嚴禁","個人設備"],"should_refuse":false},
+{"id":"policy-20","category":"cross_sentence","question":"週五 08:30 到公司可以提早下班嗎？","expected_keywords":["週五","08:30","八小時"],"should_refuse":false}
+]

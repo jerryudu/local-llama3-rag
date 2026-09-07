@@ -1,3 +1,4 @@
+import argparse
 import os
 import torch
 from langchain_community.document_loaders import TextLoader
@@ -5,6 +6,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
+from peft import PeftModel
 from langchain_huggingface import HuggingFacePipeline
 from langchain_core.prompts import PromptTemplate
 
@@ -13,7 +15,9 @@ from langchain_core.prompts import PromptTemplate
 # 目標: 載入技術文件 -> 向量資料庫 -> LLaMA-3 (8B) 4-bit 回答
 # ==========================================
 
-def setup_rag_retriever(txt_path):
+def setup_rag_retriever(txt_path, persist_directory="./chroma_db"):
+    if not os.path.exists(txt_path):
+        raise FileNotFoundError(f"找不到知識庫文件: {txt_path}")
     print(f"1. 讀取技術文件: {txt_path}")
     loader = TextLoader(txt_path, encoding='utf-8')
     documents = loader.load()
@@ -32,12 +36,12 @@ def setup_rag_retriever(txt_path):
 
     print("4. 建立 Chroma 向量資料庫...")
     # 對應履歷: 串接向量資料庫
-    vectorstore = Chroma.from_documents(docs, embeddings, persist_directory="./chroma_db")
+    vectorstore = Chroma.from_documents(docs, embeddings, persist_directory=persist_directory)
     retriever = vectorstore.as_retriever(search_kwargs={"k": 3}) # 每次檢索最相關的 3 個片段
     
     return retriever
 
-def setup_llama3_llm():
+def setup_llama3_llm(adapter_path=None):
     print("5. 載入 4-bit 量化 LLaMA-3 (8B) 模型...")
     model_id = "unsloth/llama-3-8b-bnb-4bit"
     tokenizer = AutoTokenizer.from_pretrained(model_id)
@@ -49,8 +53,13 @@ def setup_llama3_llm():
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         quantization_config=quantization_config,
-        device_map="auto" # 自動將模型分配到 GPU
+        device_map="auto"
     )
+    if adapter_path:
+        if not os.path.isdir(adapter_path):
+            raise FileNotFoundError(f"找不到 LoRA Adapter 目錄: {adapter_path}")
+        model = PeftModel.from_pretrained(model, adapter_path)
+    model.eval()
     
     # 建立 LangChain 認識的 HuggingFacePipeline
     pipe = pipeline(
@@ -64,23 +73,29 @@ def setup_llama3_llm():
     llm = HuggingFacePipeline(pipeline=pipe)
     return llm
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="以 Base LLaMA-3 或 LoRA Adapter 執行企業文件 RAG 問答")
+    parser.add_argument("--document", default="company_policy.txt")
+    parser.add_argument("--chroma-dir", default="./chroma_db")
+    parser.add_argument("--use-lora", action="store_true")
+    parser.add_argument("--adapter-path")
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+    adapter_path = args.adapter_path
+    if args.use_lora:
+        if adapter_path:
+            raise ValueError("--use-lora 與 --adapter-path 不需同時使用")
+        adapter_path = "./llama3-tech-lora-adapter"
     # 假設我們有一個技術文件叫做 company_policy.pdf
     # (你需要先在同一個資料夾放一個 txt 檔才能跑)
-    txt_file = "company_policy.txt"
-    
-    if not os.path.exists(txt_file):
-        print(f"⚠️ 找不到 {txt_file}，請先準備一個文字檔案測試！")
-        # 為了展示，如果你沒檔案，我們這裡直接建立假的資料庫
-        # return
-
-    # 1 & 2: 準備檢索器與大模型
     try:
-        retriever = setup_rag_retriever(txt_file)
-        llm = setup_llama3_llm()
+        retriever = setup_rag_retriever(args.document, args.chroma_dir)
+        llm = setup_llama3_llm(adapter_path)
     except Exception as e:
-        print(f"初始化失敗: {e}")
-        return
+        raise RuntimeError(f"初始化失敗: {e}") from e
 
     print("6. 建立 RAG (檢索增強生成) 流程...")
     # 對應履歷: 減少 20% 的模型幻覺
@@ -121,8 +136,7 @@ def main():
         
         print("\n================= 回答 =================\n")
         # 因為 LLaMA-3 的 pipeline 會把 prompt 也印出來，這裡做個簡單的切割只取 assistant 後面的字
-        answer = response.split("<|start_header_id|>assistant<|end_header_id|>")[-1].strip()
-        print(answer)
+        print(response.strip())
         print(" ========================================")
 if __name__ == "__main__":
     main()

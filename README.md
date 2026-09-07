@@ -1,5 +1,4 @@
-# 🏢 企業級 AI 知識庫與 RAG 檢索系統
-(Enterprise AI Knowledge Base & RAG System)
+# Local LLaMA-3 RAG + QLoRA POC
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange)
@@ -10,17 +9,17 @@
 本專案旨在解決企業內部私有資料的 AI 問答需求，透過 **RAG (檢索增強生成)** 架構結合開源大型語言模型 (LLaMA-3)，打造出具備高準確度且低幻覺的智能技術助理。
 同時，為了解決大模型部署成本高昂的問題，本專案導入了 **4-bit 量化 (Quantization)** 與 **LoRA (低秩適應)** 技術，使其能夠在單張消費級 GPU (如 10GB VRAM) 上進行高效能的微調與推論部署。
 
-### 🌟 核心成果 (Key Achievements)
-* **降低 70% 訓練硬體門檻**：運用 QLoRA 技術 (4-bit 載入 + LoRA 微調)，成功將 LLaMA-3 (8B) 的微調記憶體需求從 >16GB 壓縮至 ~8GB。
-* **減少 20% 模型幻覺 (Hallucinations)**：建置完整 RAG 檢索流程，透過 LangChain 進行文本切塊 (`chunk_size=1000, overlap=200`) 並寫入 Chroma 向量資料庫，強制模型依據檢索上下文回答。
-* **邊緣部署落地能力**：優化模型推論延遲，證實系統可在消費級硬體上穩定運行。
+### Current Status
+這是 Local LLaMA-3 8B + QLoRA + RAG 的 Proof of Concept。Accuracy、VRAM 與 latency 數字只以 `results/` 中的實測輸出為準。
 
 ---
 
 ## 📂 專案架構 (Project Structure)
 * `train_lora.py`: **LLM 微調腳本**。負責載入技術領域資料集 (此處以 Databricks Dolly 為例)，並使用 PEFT/TRL 庫對 LLaMA-3 進行 4-bit LoRA 微調。
-* `rag_system.py`: **RAG 檢索問答主程式**。整合 `PyPDFLoader`、`ChromaDB` 向量資料庫與量化後的 LLaMA-3 模型，提供終端機互動式的私有知識庫問答介面。
-* `company_policy.pdf`: (需自行準備) 作為 RAG 系統知識庫來源的範例技術文件。
+* `rag_system.py`: **RAG 檢索問答主程式**。使用 `TextLoader`、ChromaDB 與量化後的 LLaMA-3。
+* `company_policy.txt`: RAG 系統使用的範例企業政策文件。
+* `eval_questions.json`, `evaluate_rag.py`: 評估資料與 No-RAG / RAG 評估腳本。
+* `benchmark_memory.py`, `benchmark_inference.py`: memory 與 latency benchmark。
 
 ---
 
@@ -35,7 +34,7 @@ pip install transformers peft trl accelerate bitsandbytes datasets
 
 # RAG 與向量資料庫套件
 pip install langchain langchain-community langchain-huggingface
-pip install chromadb pypdf sentence-transformers
+pip install langchain-text-splitters chromadb sentence-transformers
 ```
 
 ---
@@ -49,11 +48,42 @@ python train_lora.py
 ```
 
 ### 2. 啟動 RAG 檢索問答系統
-請先在專案根目錄放置一份名為 `company_policy.pdf` 的文件，接著執行：
+使用現有的 `company_policy.txt` 啟動 RAG：
 ```bash
 python rag_system.py
+python rag_system.py --use-lora
+python rag_system.py --adapter-path ./llama3-tech-lora-adapter
 ```
-系統會自動將 PDF 進行切塊、向量化並存入本地的 ChromaDB 中。待模型載入完畢後，即可在終端機輸入問題進行問答測試。
+系統會將 TXT 切塊、向量化並存入本地的 ChromaDB 中。
+
+### Evaluation and Benchmarks
+
+```bash
+python evaluate_rag.py
+python benchmark_memory.py
+python benchmark_inference.py
+python -m unittest discover -s tests -v
+```
+
+沒有 CUDA 時，memory benchmark 會停止且不會產生模擬結果。Dolly fine-tuning 是 instruction-following POC；企業政策知識主要由 RAG 提供。
+
+### Measured Results
+
+Results from the 20-question `company_policy.txt` evaluation on the Base model:
+
+| Mode | Accuracy | Hallucination Rate | Refusal Accuracy |
+| --- | ---: | ---: | ---: |
+| No-RAG | 0.0% | 20.0% | 0.0% |
+| RAG | 60.0% | 0.0% | 100.0% |
+
+The RAG run produced 12 correct answers, 4 incorrect answers, and 4 correct refusals. These results are from a small POC set and are not a production quality or causal claim. The evaluation was run without the LoRA Adapter; LoRA + RAG requires a separate run with `--adapter-path`.
+
+### Known Limitations
+
+- Evaluation set 只有 20 題，只能代表小型 POC 結果。
+- LoRA 是否提升 policy QA 必須由 evaluation 驗證。
+- 4-bit latency 取決於 GPU、kernel 與 framework。
+- 本專案未涵蓋 production authentication、RBAC、ACL 或 multi-user service。
 
 ---
 

@@ -8,3 +8,7 @@ transformers
 torch
 accelerate
 bitsandbytes
+datasets
+peft
+trl
+langchain-text-splitters

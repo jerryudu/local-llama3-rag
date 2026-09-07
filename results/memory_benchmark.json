@@ -1,0 +1,7 @@
+{
+  "model_id": "unsloth/llama-3-8b-bnb-4bit",
+  "gpu_name": "NVIDIA GeForce RTX 3080",
+  "gpu_vram_bytes": 10356850688,
+  "peak_memory_allocated_bytes": 5702755328,
+  "peak_memory_reserved_bytes": 5712642048
+}

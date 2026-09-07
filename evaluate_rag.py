@@ -24,7 +24,20 @@ def summarize(results):
     counts = Counter(result["label"] for result in results)
     total = len(results)
     refused = sum(result.get("should_refuse", False) for result in results)
-    return {"total_questions": total, "correct_answers": counts["correct"], "incorrect_answers": counts["incorrect"], "hallucinated_answers": counts["hallucination"], "correct_refusals": counts["correct_refusal"], "accuracy": counts["correct"] / total if total else 0.0, "hallucination_rate": counts["hallucination"] / total if total else 0.0, "refusal_accuracy": counts["correct_refusal"] / refused if refused else 0.0}
+    correct_answers = counts["correct"]
+    correct_refusals = counts["correct_refusal"]
+    return {
+        "total_questions": total,
+        "correct_answers": correct_answers,
+        "incorrect_answers": counts["incorrect"],
+        "hallucinated_answers": counts["hallucination"],
+        "correct_refusals": correct_refusals,
+        "answer_accuracy": correct_answers / total if total else 0.0,
+        "accuracy": correct_answers / total if total else 0.0,
+        "hallucination_rate": counts["hallucination"] / total if total else 0.0,
+        "refusal_accuracy": correct_refusals / refused if refused else 0.0,
+        "overall_success_rate": (correct_answers + correct_refusals) / total if total else 0.0,
+    }
 
 
 def build_rag_prompt(context, question):
@@ -40,7 +53,8 @@ def run_evaluation(questions, llm, retriever=None):
             answer = llm.invoke(build_rag_prompt(context, question["question"]))
         else:
             answer = llm.invoke(question["question"])
-        results.append({**question, "context": context, "answer": answer.strip(), "label": classify_answer(answer.strip(), question)})
+        model_generated_answer = answer.strip()
+        results.append({**question, "context": context, "answer": model_generated_answer, "model_generated_answer": model_generated_answer, "label": classify_answer(model_generated_answer, question)})
     return results
 
 
@@ -56,7 +70,7 @@ def main():
     llm = setup_llama3_llm(args.adapter_path)
     evaluations = {"no_rag": run_evaluation(questions, llm)}
     evaluations["rag"] = run_evaluation(questions, llm, setup_rag_retriever(args.document))
-    output = {"evaluations": {name: {"summary": summarize(items), "results": items} for name, items in evaluations.items()}}
+    output = {"adapter_path": args.adapter_path, "evaluations": {name: {"summary": summarize(items), "results": items} for name, items in evaluations.items()}}
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
     with open(args.output, "w", encoding="utf-8") as file:
         json.dump(output, file, ensure_ascii=False, indent=2)

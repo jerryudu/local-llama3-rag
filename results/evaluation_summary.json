@@ -1,0 +1,18 @@
+{
+  "evaluation_type": "LoRA + No-RAG vs LoRA + RAG",
+  "questions": 20,
+  "adapter_path": "./llama3-tech-lora-adapter",
+  "no_rag": {
+    "answer_accuracy": 0.0,
+    "hallucination_rate": 0.2,
+    "refusal_accuracy": 0.0,
+    "overall_success_rate": 0.0
+  },
+  "rag_lora": {
+    "answer_accuracy": 0.4,
+    "hallucination_rate": 0.0,
+    "refusal_accuracy": 1.0,
+    "overall_success_rate": 0.6
+  },
+  "note": "Small POC evaluation; metrics are based only on model-generated answers after return_full_text=False was enabled."
+}

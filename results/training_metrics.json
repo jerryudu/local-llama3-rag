@@ -1,0 +1,23 @@
+{
+  "train_runtime": 414.0265,
+  "train_samples_per_second": 1.932,
+  "train_steps_per_second": 0.242,
+  "total_flos": 4940043415805952.0,
+  "train_loss": 3.005249137878418,
+  "epoch": 0.8,
+  "model_id": "unsloth/llama-3-8b-bnb-4bit",
+  "dataset_size": 1000,
+  "max_steps": 100,
+  "seed": 42,
+  "per_device_batch_size": 1,
+  "gradient_accumulation_steps": 8,
+  "max_seq_length": 256,
+  "lora_rank": 8,
+  "optimizer": "sgd",
+  "cpu_offload": true,
+  "trainable_parameters": 20971520,
+  "total_parameters": 4561571840,
+  "trainable_parameter_percent": 0.4597432800707573,
+  "peak_memory_allocated_bytes": 9557017600,
+  "peak_memory_reserved_bytes": 9644802048
+}

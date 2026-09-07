@@ -69,14 +69,16 @@ python -m unittest discover -s tests -v
 
 ### Measured Results
 
-Results from the 20-question `company_policy.txt` evaluation on the Base model:
+Results from the 20-question `company_policy.txt` evaluation using `./llama3-tech-lora-adapter`:
 
-| Mode | Accuracy | Hallucination Rate | Refusal Accuracy |
-| --- | ---: | ---: | ---: |
-| No-RAG | 0.0% | 20.0% | 0.0% |
-| RAG | 60.0% | 0.0% | 100.0% |
+| Mode | Answer Accuracy | Overall Success Rate | Hallucination Rate | Refusal Accuracy |
+| --- | ---: | ---: | ---: | ---: |
+| No-RAG | 0.0% | 0.0% | 20.0% | 0.0% |
+| RAG + LoRA | 40.0% | 60.0% | 0.0% | 100.0% |
 
-The RAG run produced 12 correct answers, 4 incorrect answers, and 4 correct refusals. These results are from a small POC set and are not a production quality or causal claim. The evaluation was run without the LoRA Adapter; LoRA + RAG requires a separate run with `--adapter-path`.
+The RAG + LoRA run produced 8 correct answers, 8 incorrect answers, and 4 correct refusals. `Answer Accuracy` counts factual answers only; `Overall Success Rate` counts factual answers plus correct refusals. These results are from a small POC set and are not a production quality or causal claim. The No-RAG run used the same LoRA-loaded model without retrieved context.
+
+The 4-bit model loading benchmark used an RTX 3080 and reached 5.31 GiB peak allocated memory. The post-fix LoRA inference benchmark used 2 warm-up runs and 10 measured runs: median 1.926 seconds and p95 1.984 seconds.
 
 ### Known Limitations
 

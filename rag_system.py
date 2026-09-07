@@ -67,7 +67,8 @@ def setup_llama3_llm(adapter_path=None):
         model=model,
         tokenizer=tokenizer,
         max_new_tokens=256,
-        temperature=0.1,
+        do_sample=False,
+        return_full_text=False,
         repetition_penalty=1.1,
     )
     llm = HuggingFacePipeline(pipeline=pipe)
@@ -89,8 +90,6 @@ def main():
         if adapter_path:
             raise ValueError("--use-lora 與 --adapter-path 不需同時使用")
         adapter_path = "./llama3-tech-lora-adapter"
-    # 假設我們有一個技術文件叫做 company_policy.pdf
-    # (你需要先在同一個資料夾放一個 txt 檔才能跑)
     try:
         retriever = setup_rag_retriever(args.document, args.chroma_dir)
         llm = setup_llama3_llm(adapter_path)
@@ -98,7 +97,6 @@ def main():
         raise RuntimeError(f"初始化失敗: {e}") from e
 
     print("6. 建立 RAG (檢索增強生成) 流程...")
-    # 對應履歷: 減少 20% 的模型幻覺
     # 定義 RAG 專屬的 Prompt，強制模型只能看 Context 回答
     template = """
     <|begin_of_text|><|start_header_id|>system<|end_header_id|>
@@ -135,7 +133,6 @@ def main():
         })
         
         print("\n================= 回答 =================\n")
-        # 因為 LLaMA-3 的 pipeline 會把 prompt 也印出來，這裡做個簡單的切割只取 assistant 後面的字
         print(response.strip())
         print(" ========================================")
 if __name__ == "__main__":
